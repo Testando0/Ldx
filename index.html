@@ -3,105 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crisálida Vision PRO</title>
+    <title>Crisálida Vision | Neural Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { background: #020202; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
-        .gradient-text { background: linear-gradient(90deg, #fff, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { background-color: #000; color: #fff; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); }
+        .btn-glow:hover { box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); transform: translateY(-2px); }
+        .shimmer { animation: loading 1.5s infinite; background: linear-gradient(90deg, #0a0a0a 25%, #1a1a1a 50%, #0a0a0a 75%); background-size: 200% 100%; }
+        @keyframes loading { from { background-position: 200% 0; } to { background-position: -200% 0; } }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
-    
-    <div class="w-full max-w-3xl space-y-8">
-        <div class="text-center space-y-2">
-            <h1 class="text-5xl font-extrabold tracking-tighter gradient-text">CRISÁLIDA VISION</h1>
-            <p class="text-zinc-500 font-medium">Geração de imagens de elite via Flux.1 Neural Engine</p>
+
+    <div class="w-full max-w-2xl space-y-8">
+        <div class="text-center">
+            <h1 class="text-4xl font-extrabold tracking-tighter mb-2 italic">CRISÁLIDA <span class="text-blue-500">VISION</span></h1>
+            <p class="text-zinc-500 text-sm tracking-widest">BY REDZIN | SDXL LIGHTNING ENGINE</p>
         </div>
 
-        <div class="relative group">
-            <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-            <div class="relative bg-zinc-900 rounded-2xl p-2 flex items-center">
-                <input id="prompt" type="text" placeholder="Descreva o que sua imaginação vê..." 
-                       class="bg-transparent flex-1 p-4 outline-none text-white placeholder-zinc-600">
-                <button id="genBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl font-bold transition-all flex items-center gap-2">
-                    GERAR
-                </button>
-            </div>
+        <div class="glass p-2 rounded-2xl flex items-center group transition-all focus-within:border-blue-500/50">
+            <input id="promptInput" type="text" placeholder="Descreva a imagem que deseja criar..." 
+                   class="bg-transparent flex-1 p-4 outline-none text-white placeholder-zinc-700">
+            <button id="generateBtn" class="bg-blue-600 text-white px-8 py-4 rounded-xl font-bold btn-glow transition-all active:scale-95">
+                GERAR
+            </button>
         </div>
 
-        <div class="flex flex-wrap justify-center gap-2">
-            <button onclick="addStyle('Cyberpunk, neon lights, rainy city')" class="text-xs bg-zinc-800 px-3 py-1.5 rounded-full border border-zinc-700 hover:border-blue-500 transition">Cyberpunk</button>
-            <button onclick="addStyle('Ultra-realistic, 8k, photorealistic, portrait')" class="text-xs bg-zinc-800 px-3 py-1.5 rounded-full border border-zinc-700 hover:border-blue-500 transition">Fotorealismo</button>
-            <button onclick="addStyle('Studio Ghibli style, anime art, watercolor')" class="text-xs bg-zinc-800 px-3 py-1.5 rounded-full border border-zinc-700 hover:border-blue-500 transition">Anime/Ghibli</button>
-            <button onclick="addStyle('Dark fantasy, epic scale, oil painting')" class="text-xs bg-zinc-800 px-3 py-1.5 rounded-full border border-zinc-700 hover:border-blue-500 transition">Fantasia Sombria</button>
-        </div>
-
-        <div id="result-box" class="relative min-h-[400px] w-full bg-zinc-900/50 rounded-3xl border border-zinc-800 flex items-center justify-center overflow-hidden">
-            <div id="placeholder" class="text-zinc-700 flex flex-col items-center gap-4">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M2 12h20" stroke-linecap="round"/></svg>
-                <p>Aguardando prompt...</p>
+        <div id="resultContainer" class="relative aspect-square w-full glass rounded-3xl overflow-hidden flex items-center justify-center border-2 border-dashed border-zinc-800">
+            <div id="statusText" class="text-zinc-600 text-center p-8">
+                <p>Os pixels serão sintetizados aqui.</p>
+                <p class="text-xs mt-2 opacity-50">Use prompts detalhados para maior fidelidade.</p>
             </div>
             
-            <img id="output" class="hidden w-full h-full object-contain">
+            <img id="resultImage" class="hidden w-full h-full object-cover">
             
-            <div id="loader" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm flex-col items-center justify-center space-y-4">
-                <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-blue-400 font-bold animate-pulse text-xs tracking-widest">SINTETIZANDO PIXELS</p>
+            <div id="loader" class="hidden absolute inset-0 shimmer flex flex-col items-center justify-center">
+                <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p class="text-xs font-bold tracking-[0.3em] text-blue-500">SINTETIZANDO</p>
             </div>
         </div>
 
-        <a id="downloadBtn" class="hidden w-full py-4 bg-zinc-800 hover:bg-zinc-700 text-center rounded-xl font-bold transition-all">
-            BAIXAR EM ALTA DEFINIÇÃO
-        </a>
+        <button id="downloadBtn" class="hidden w-full py-4 glass rounded-xl font-bold hover:bg-white/5 transition-all flex items-center justify-center gap-2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4M7 10l5 5 5-5M12 15V3"/></svg>
+            SALVAR EM ALTA DEFINIÇÃO
+        </button>
     </div>
 
     <script>
-        const btn = document.getElementById('genBtn');
-        const promptInput = document.getElementById('prompt');
-        const output = document.getElementById('output');
+        const btn = document.getElementById('generateBtn');
+        const input = document.getElementById('promptInput');
+        const image = document.getElementById('resultImage');
         const loader = document.getElementById('loader');
-        const placeholder = document.getElementById('placeholder');
-        const downloadBtn = document.getElementById('downloadBtn');
-
-        function addStyle(style) {
-            promptInput.value += (promptInput.value ? ", " : "") + style;
-        }
+        const status = document.getElementById('statusText');
+        const download = document.getElementById('downloadBtn');
 
         btn.onclick = async () => {
-            if(!promptInput.value) return;
+            const prompt = input.value.trim();
+            if (!prompt) return;
 
+            // UI State
             btn.disabled = true;
             loader.style.display = 'flex';
-            output.classList.add('hidden');
-            placeholder.classList.add('hidden');
-            downloadBtn.classList.add('hidden');
+            status.classList.add('hidden');
+            image.classList.add('hidden');
+            download.classList.add('hidden');
 
             try {
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: promptInput.value })
+                    body: JSON.stringify({ prompt: prompt })
                 });
 
-                if(!response.ok) throw new Error();
+                if (response.status === 503) {
+                    throw new Error("O modelo está acordando. Tente novamente em alguns segundos.");
+                }
+
+                if (!response.ok) throw new Error("Erro na geração. Verifique seu Token.");
 
                 const blob = await response.blob();
                 const url = URL.createObjectURL(blob);
                 
-                output.src = url;
-                output.classList.remove('hidden');
-                downloadBtn.href = url;
-                downloadBtn.download = `crisalida_${Date.now()}.png`;
-                downloadBtn.classList.remove('hidden');
+                image.src = url;
+                image.classList.remove('hidden');
+                
+                download.onclick = () => {
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `crisalida_${Date.now()}.png`;
+                    a.click();
+                };
+                download.classList.remove('hidden');
+
             } catch (err) {
-                alert("O modelo está acordando! Tente novamente em 10 segundos.");
+                alert(err.message);
+                status.classList.remove('hidden');
             } finally {
                 loader.style.display = 'none';
                 btn.disabled = false;
             }
         };
+
+        input.onkeydown = (e) => { if(e.key === 'Enter') btn.click(); };
     </script>
 </body>
 </html>
