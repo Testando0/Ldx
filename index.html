@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crisálida Vision PRO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { background: #020202; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+        .gradient-text { background: linear-gradient(90deg, #fff, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+    
+    <div class="w-full max-w-3xl space-y-8">
+        <div class="text-center space-y-2">
+            <h1 class="text-5xl font-extrabold tracking-tighter gradient-text">CRISÁLIDA VISION</h1>
+            <p class="text-zinc-500 font-medium">Geração de imagens de elite via Flux.1 Neural Engine</p>
+        </div>
+
+        <div class="relative group">
+            <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+            <div class="relative bg-zinc-900 rounded-2xl p-2 flex items-center">
+                <input id="prompt" type="text" placeholder="Descreva o que sua imaginação vê..." 
+                       class="bg-transparent flex-1 p-4 outline-none text-white placeholder-zinc-600">
+                <button id="genBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl font-bold transition-all flex items-center gap-2">
+                    GERAR
+                </button>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-2">
+            <button onclick="addStyle('Cyberpunk, neon lights, rainy city')" class="text-xs bg-zinc-800 px-3 py-1.5 rounded-full border border-zinc-700 hover:border-blue-500 transition">Cyberpunk</button>
+            <button onclick="addStyle('Ultra-realistic, 8k, photorealistic, portrait')" class="text-xs bg-zinc-800 px-3 py-1.5 rounded-full border border-zinc-700 hover:border-blue-500 transition">Fotorealismo</button>
+            <button onclick="addStyle('Studio Ghibli style, anime art, watercolor')" class="text-xs bg-zinc-800 px-3 py-1.5 rounded-full border border-zinc-700 hover:border-blue-500 transition">Anime/Ghibli</button>
+            <button onclick="addStyle('Dark fantasy, epic scale, oil painting')" class="text-xs bg-zinc-800 px-3 py-1.5 rounded-full border border-zinc-700 hover:border-blue-500 transition">Fantasia Sombria</button>
+        </div>
+
+        <div id="result-box" class="relative min-h-[400px] w-full bg-zinc-900/50 rounded-3xl border border-zinc-800 flex items-center justify-center overflow-hidden">
+            <div id="placeholder" class="text-zinc-700 flex flex-col items-center gap-4">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M2 12h20" stroke-linecap="round"/></svg>
+                <p>Aguardando prompt...</p>
+            </div>
+            
+            <img id="output" class="hidden w-full h-full object-contain">
+            
+            <div id="loader" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm flex-col items-center justify-center space-y-4">
+                <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-blue-400 font-bold animate-pulse text-xs tracking-widest">SINTETIZANDO PIXELS</p>
+            </div>
+        </div>
+
+        <a id="downloadBtn" class="hidden w-full py-4 bg-zinc-800 hover:bg-zinc-700 text-center rounded-xl font-bold transition-all">
+            BAIXAR EM ALTA DEFINIÇÃO
+        </a>
+    </div>
+
+    <script>
+        const btn = document.getElementById('genBtn');
+        const promptInput = document.getElementById('prompt');
+        const output = document.getElementById('output');
+        const loader = document.getElementById('loader');
+        const placeholder = document.getElementById('placeholder');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        function addStyle(style) {
+            promptInput.value += (promptInput.value ? ", " : "") + style;
+        }
+
+        btn.onclick = async () => {
+            if(!promptInput.value) return;
+
+            btn.disabled = true;
+            loader.style.display = 'flex';
+            output.classList.add('hidden');
+            placeholder.classList.add('hidden');
+            downloadBtn.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: promptInput.value })
+                });
+
+                if(!response.ok) throw new Error();
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                output.src = url;
+                output.classList.remove('hidden');
+                downloadBtn.href = url;
+                downloadBtn.download = `crisalida_${Date.now()}.png`;
+                downloadBtn.classList.remove('hidden');
+            } catch (err) {
+                alert("O modelo está acordando! Tente novamente em 10 segundos.");
+            } finally {
+                loader.style.display = 'none';
+                btn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>
