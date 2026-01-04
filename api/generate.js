@@ -1,38 +1,28 @@
 export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' });
+    if (req.method !== 'POST') return res.status(405).send('Método não permitido');
 
     const { prompt } = req.body;
-    const HF_TOKEN = process.env.HF_TOKEN;
+    
+    // Geramos um número aleatório para garantir que cada imagem seja única
+    const seed = Math.floor(Math.random() * 999999);
+    
+    // Usamos o modelo Flux Pro via Pollinations (Grátis, Rápido e Sem Token)
+    // Isso ignora o problema do timeout da Vercel
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?model=flux&width=1024&height=1024&seed=${seed}&nologo=true`;
 
     try {
-        const response = await fetch(
-            "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
-            {
-                headers: { 
-                    Authorization: `Bearer ${HF_TOKEN}`, 
-                    "Content-Type": "application/json"
-                },
-                method: "POST",
-                body: JSON.stringify({ 
-                    inputs: prompt + ", cinematic, 8k, highly detailed, masterpiece",
-                    parameters: {
-                        negative_prompt: "blurry, distorted, low quality, bad anatomy",
-                        num_inference_steps: 30
-                    }
-                }),
-            }
-        );
+        const response = await fetch(imageUrl);
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            return res.status(response.status).json({ error: "Hugging Face ocupado ou carregando." });
-        }
+        if (!response.ok) throw new Error('Falha ao obter imagem');
 
-        const buffer = await response.arrayBuffer();
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
         res.setHeader('Content-Type', 'image/png');
-        return res.send(Buffer.from(buffer));
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        return res.send(buffer);
 
     } catch (error) {
-        return res.status(500).json({ error: "Erro de conexão com o servidor." });
+        return res.status(500).json({ error: "Erro ao gerar: " + error.message });
     }
 }
